@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Clock, DollarSign, Search, Calendar } from "lucide-react";
+import { Search, Calendar } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { ShiftCard } from "@/components/shifts/ShiftCard";
+import { ShiftDetailsModal } from "@/components/shifts/ShiftDetailsModal";
 
 const shiftsData = [
   {
@@ -213,6 +211,7 @@ const Shifts = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedShift, setSelectedShift] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const shiftsPerPage = 9;
 
   const filteredShifts = shiftsData.filter((shift) => {
@@ -227,6 +226,11 @@ const Shifts = () => {
   const indexOfFirstShift = indexOfLastShift - shiftsPerPage;
   const currentShifts = filteredShifts.slice(indexOfFirstShift, indexOfLastShift);
   const totalPages = Math.ceil(filteredShifts.length / shiftsPerPage);
+
+  const handleViewDetails = (shift: any) => {
+    setSelectedShift(shift);
+    setIsModalOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -258,51 +262,11 @@ const Shifts = () => {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {currentShifts.map((shift) => (
-            <Card key={shift.id} className="p-6 glass">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-semibold">{shift.driver}</h3>
-                  <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>
-                      {shift.startTime} - {shift.endTime}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <DollarSign className="h-4 w-4 text-green-500" />
-                    <span className="text-green-500">{shift.revenue}€</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      shift.status === "En cours"
-                        ? "bg-blue-500/20 text-blue-500"
-                        : "bg-green-500/20 text-green-500"
-                    }`}
-                  >
-                    {shift.status}
-                  </span>
-                  <div className="mt-2 text-muted-foreground">
-                    {shift.trips} courses
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setSelectedShift(shift)}
-                >
-                  Voir Détails
-                </Button>
-                {shift.status === "En cours" && (
-                  <Button variant="default" className="w-full">
-                    Terminer le Shift
-                  </Button>
-                )}
-              </div>
-            </Card>
+            <ShiftCard
+              key={shift.id}
+              shift={shift}
+              onViewDetails={handleViewDetails}
+            />
           ))}
         </div>
 
@@ -315,8 +279,8 @@ const Shifts = () => {
                   className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                 />
               </PaginationItem>
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i + 1}>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <PaginationItem key={i}>
                   <PaginationLink
                     onClick={() => setCurrentPage(i + 1)}
                     isActive={currentPage === i + 1}
@@ -335,60 +299,14 @@ const Shifts = () => {
           </Pagination>
         )}
 
-        <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Détails du Shift</DialogTitle>
-            </DialogHeader>
-            {selectedShift && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold">Chauffeur</h4>
-                    <p>{selectedShift.driver}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Date</h4>
-                    <p>{selectedShift.date}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Horaires</h4>
-                    <p>{selectedShift.startTime} - {selectedShift.endTime}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Revenus</h4>
-                    <p className="text-green-500">{selectedShift.revenue}€</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Kilomètres</h4>
-                    <p>{selectedShift.details.totalKm} km</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Coût Carburant</h4>
-                    <p>{selectedShift.details.fuelCost}€</p>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Répartition par Platform</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Uber</span>
-                      <span>{selectedShift.details.platformBreakdown.uber}€</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Bolt</span>
-                      <span>{selectedShift.details.platformBreakdown.bolt}€</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Heetch</span>
-                      <span>{selectedShift.details.platformBreakdown.heetch}€</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+        <ShiftDetailsModal
+          shift={selectedShift}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedShift(null);
+          }}
+        />
       </div>
     </DashboardLayout>
   );
