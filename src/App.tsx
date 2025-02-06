@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Drivers from "./pages/Drivers";
+import AddDriver from "./pages/AddDriver";
 import Schedule from "./pages/Schedule";
 import Shifts from "./pages/Shifts";
 import NotFound from "./pages/NotFound";
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/drivers" element={<Drivers />} />
+          <Route path="/drivers/add" element={<AddDriver />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/shifts" element={<Shifts />} />
           <Route path="*" element={<NotFound />} />
